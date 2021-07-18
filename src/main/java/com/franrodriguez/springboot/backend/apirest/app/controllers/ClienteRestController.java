@@ -1,5 +1,6 @@
 package com.franrodriguez.springboot.backend.apirest.app.controllers;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -165,6 +166,17 @@ public class ClienteRestController {
 		Map<String, Object> response = new HashMap<String, Object>();
 		
 		try {
+			Cliente cliente = clienteService.findById(id);
+			String fotoAnterior = cliente.getFoto();
+			
+			if(fotoAnterior != null && fotoAnterior.length() > 0) {
+				Path rutaFotoAnterior = Paths.get("uploads").resolve(fotoAnterior).toAbsolutePath();
+				File archivoFotoAnterior = rutaFotoAnterior.toFile();
+				if(archivoFotoAnterior.exists() && archivoFotoAnterior.canRead()) {
+					archivoFotoAnterior.delete();
+				}
+			}
+			
 			clienteService.delete(id);
 		} catch (DataAccessException e) {
 			response.put("mensaje", "Error al eliminar el cliente en la base de datos");
@@ -193,6 +205,16 @@ public class ClienteRestController {
 				response.put("mensaje", "Error al subir la imagen " +nombreArchivo);
 				response.put("error", e.getMessage().concat(": ").concat(e.getCause().getMessage()));
 				return new ResponseEntity<Map<String, Object>>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+			}
+			
+			String fotoAnterior = cliente.getFoto();
+			
+			if(fotoAnterior != null && fotoAnterior.length() > 0) {
+				Path rutaFotoAnterior = Paths.get("uploads").resolve(fotoAnterior).toAbsolutePath();
+				File archivoFotoAnterior = rutaFotoAnterior.toFile();
+				if(archivoFotoAnterior.exists() && archivoFotoAnterior.canRead()) {
+					archivoFotoAnterior.delete();
+				}
 			}
 			
 			cliente.setFoto(nombreArchivo);
