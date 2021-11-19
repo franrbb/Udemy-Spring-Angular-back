@@ -19,7 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UsuarioService implements UserDetailsService{
+public class UsuarioService implements UserDetailsService, IUsuarioService{
 	
 	private Logger log = org.slf4j.LoggerFactory.getLogger(UsuarioService.class);
 	
@@ -33,17 +33,24 @@ public class UsuarioService implements UserDetailsService{
 		Usuario usuario = usuarioDao.findByUsername(username);
 		
 		if(usuario == null) {
-			log.error("Error en el login: no existe el usuaio " +username+ " en el sistema");
+			log.error("Error en el login: no existe el usuario " +username+ " en el sistema");
 			throw new UsernameNotFoundException("Error en el login: no existe el usuaio " +username+ " en el sistema");
 		}
 		
-		List<GrantedAuthority> authories = usuario.getRoles()
+		List<GrantedAuthority> authorities = usuario.getRoles()
 				.stream()
-				.map(role -> new SimpleGrantedAuthority(username))
+				.map(role -> new SimpleGrantedAuthority(role.getNombre()))
 				.peek(authority -> log.info("Role " +authority.getAuthority()))
 				.collect(Collectors.toList());
 		
-		return new User(usuario.getUsername(), usuario.getPassword(), usuario.isEnabled(), true, true, true, authories);
+		return new User(usuario.getUsername(), usuario.getPassword(), usuario.isEnabled(), true, true, true, authorities);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Usuario findByUsername(String username) {
+		// TODO Auto-generated method stub
+		return usuarioDao.findByUsername(username);
 	}
 
 }
